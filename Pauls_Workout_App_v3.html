@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TRAIN">
+<title>TRAIN</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* Navy palette */
+  --navy-900:#060d1a;
+  --navy-800:#0a1628;
+  --navy-700:#0f2040;
+  --navy-600:#142a52;
+  --navy-500:#1a3566;
+  --navy-400:#1e4080;
+  --navy-300:#264d99;
+
+  --bg:var(--navy-900);
+  --bg2:var(--navy-800);
+  --bg3:var(--navy-700);
+  --bg4:var(--navy-600);
+
+  --border:rgba(30,64,128,0.4);
+  --border2:rgba(38,77,153,0.5);
+  --border-bright:rgba(38,77,153,0.8);
+
+  --text:#e8f0fe;
+  --text2:#7a9cc8;
+  --text3:#4a6a9a;
+  --text4:#2a4470;
+
+  /* Accents */
+  --cyan:#00d4ff;
+  --cyan-dim:rgba(0,212,255,0.12);
+  --cyan-mid:rgba(0,212,255,0.25);
+  --gold:#d4a843;
+  --gold-dim:rgba(212,168,67,0.15);
+  --coral:#e05c4b;
+  --green:#22c98a;
+
+  --display:'Rajdhani',sans-serif;
+  --mono:'DM Mono',monospace;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+
+html,body{
+  height:100%;
+  background:var(--navy-900);
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgba(26,53,102,0.6) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 100%, rgba(10,22,40,0.8) 0%, transparent 50%);
+  color:var(--text);
+  font-family:var(--mono);
+  overflow:hidden;
+}
+button{font-family:var(--mono);cursor:pointer}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
+input[type=number]{-moz-appearance:textfield}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--navy-500);border-radius:2px}
+
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh;max-width:480px;margin:0 auto}
+
+/* HEADER */
+#header{
+  padding:calc(var(--safe-top) + 14px) 20px 12px;
+  background:linear-gradient(180deg, rgba(6,13,26,0.98) 0%, rgba(10,22,40,0.95) 100%);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;z-index:50;
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
+#header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+#day-title{
+  font-family:var(--display);font-size:26px;font-weight:700;
+  letter-spacing:1px;color:var(--text);
+  text-shadow:0 0 20px rgba(0,212,255,0.2);
+}
+#day-sub{color:var(--text3);font-size:11px;margin-top:1px;letter-spacing:0.5px}
+#header-actions{display:flex;gap:8px;align-items:center}
+.hdr-btn{
+  background:var(--navy-700);
+  border:1px solid var(--border2);
+  border-radius:10px;color:var(--text);padding:8px 12px;font-size:16px;line-height:1;
+  box-shadow:0 2px 8px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.04);
+  transition:all 0.15s;
+}
+.hdr-btn:active{transform:scale(0.95);background:var(--navy-600)}
+#today-badge{
+  background:linear-gradient(135deg,#00d4ff,#0099cc);
+  color:var(--navy-900);font-size:9px;font-family:var(--display);font-weight:700;
+  letter-spacing:2px;padding:4px 9px;border-radius:5px;
+  box-shadow:0 0 12px rgba(0,212,255,0.4);
+}
+#day-pills{display:flex;gap:5px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+#day-pills::-webkit-scrollbar{display:none}
+.day-pill{
+  border-radius:7px;padding:5px 10px;font-size:10px;letter-spacing:1px;
+  flex-shrink:0;border:1px solid transparent;
+  background:var(--navy-800);color:var(--text3);transition:all 0.15s;
+  font-family:var(--display);font-weight:600;
+}
+.day-pill.active{
+  color:var(--navy-900);
+  border-color:transparent;
+  box-shadow:0 0 10px rgba(0,212,255,0.3);
+}
+.day-pill.is-today{border-color:var(--border2);color:var(--text2)}
+
+/* CONTENT */
+#content{flex:1;overflow-y:auto;padding:0 0 calc(var(--safe-bottom)+24px)}
+
+/* ── PLAN VIEW ── */
+#plan-view{padding:16px 20px}
+.plan-intro{
+  background:linear-gradient(135deg, rgba(15,32,64,0.9), rgba(20,42,82,0.8));
+  border:1px solid var(--border2);
+  border-radius:14px;padding:14px 16px;margin-bottom:18px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.03);
+}
+.plan-intro-title{
+  font-family:var(--display);font-size:11px;letter-spacing:3px;
+  color:var(--cyan);margin-bottom:5px;font-weight:600;
+}
+.plan-intro-text{font-size:11px;color:var(--text2);line-height:1.6}
+
+.plan-slot{margin-bottom:22px}
+.slot-label{
+  font-family:var(--display);font-size:11px;letter-spacing:2px;font-weight:600;
+  margin-bottom:10px;display:flex;align-items:center;gap:8px
+}
+.slot-phase-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.slot-name{color:var(--text2)}
+
+.slot-tiles{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.ex-tile{
+  background:linear-gradient(160deg, var(--navy-700), var(--navy-800));
+  border:1.5px solid var(--border);
+  border-radius:13px;overflow:hidden;cursor:pointer;
+  transition:all 0.18s;display:flex;flex-direction:column;
+  box-shadow:0 4px 12px rgba(0,0,0,0.3);
+}
+.ex-tile:active{transform:scale(0.95)}
+.ex-tile.selected{
+  border-color:var(--cyan);
+  background:linear-gradient(160deg, rgba(0,212,255,0.08), rgba(10,22,40,0.95));
+  box-shadow:0 0 16px rgba(0,212,255,0.2),0 4px 12px rgba(0,0,0,0.3);
+}
+.ex-tile.selected-gold{
+  border-color:var(--gold);
+  background:linear-gradient(160deg, rgba(212,168,67,0.1), rgba(10,22,40,0.95));
+  box-shadow:0 0 16px rgba(212,168,67,0.2),0 4px 12px rgba(0,0,0,0.3);
+}
+.tile-img{
+  width:100%;aspect-ratio:1;
+  background:linear-gradient(145deg,var(--navy-700),var(--navy-600));
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;position:relative;
+}
+.tile-img svg{width:82%;height:82%}
+.tile-img::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,transparent 60%,rgba(6,13,26,0.5) 100%);
+  pointer-events:none;
+}
+.tile-label{
+  padding:7px 5px;font-family:var(--display);font-size:10px;font-weight:500;
+  line-height:1.2;color:var(--text2);text-align:center;flex:1;
+  display:flex;align-items:center;justify-content:center;letter-spacing:0.3px;
+}
+.tile-selected-check{
+  position:absolute;top:5px;right:5px;z-index:2;
+  width:18px;height:18px;border-radius:50%;
+  background:var(--cyan);color:var(--navy-900);
+  display:none;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;
+  box-shadow:0 0 8px rgba(0,212,255,0.6);
+}
+.ex-tile.selected .tile-selected-check{display:flex}
+.ex-tile.selected-gold .tile-selected-check{display:flex;background:var(--gold);box-shadow:0 0 8px rgba(212,168,67,0.6)}
+
+.start-btn{
+  width:100%;
+  background:linear-gradient(135deg,#1a5aaa,#0f3d7a);
+  border:1px solid var(--cyan);
+  color:var(--cyan);
+  border-radius:13px;padding:16px;
+  font-family:var(--display);font-size:16px;font-weight:700;letter-spacing:3px;
+  margin-top:10px;transition:all 0.2s;
+  box-shadow:0 0 20px rgba(0,212,255,0.15),0 4px 16px rgba(0,0,0,0.4);
+  text-shadow:0 0 10px rgba(0,212,255,0.5);
+}
+.start-btn:active{transform:scale(0.98);box-shadow:0 0 30px rgba(0,212,255,0.3)}
+
+/* ── WORKOUT VIEW ── */
+#workout-view{padding:14px 20px}
+.back-to-plan{
+  display:flex;align-items:center;gap:8px;
+  color:var(--text3);font-family:var(--display);font-size:12px;letter-spacing:1px;font-weight:600;
+  background:none;border:none;margin-bottom:14px;padding:0;
+  transition:color 0.15s;
+}
+.back-to-plan:active{color:var(--cyan)}
+
+.ex-card{
+  background:linear-gradient(160deg,var(--navy-800),var(--navy-700));
+  border:1px solid var(--border);
+  border-radius:13px;margin-bottom:9px;overflow:hidden;
+  transition:all 0.25s;
+  box-shadow:0 3px 12px rgba(0,0,0,0.3);
+}
+.ex-card.complete{
+  border-color:rgba(0,212,255,0.4);
+  background:linear-gradient(160deg,rgba(0,212,255,0.05),var(--navy-800));
+  box-shadow:0 3px 12px rgba(0,0,0,0.3),0 0 20px rgba(0,212,255,0.08);
+}
+.card-header{padding:12px 13px;display:flex;align-items:center;gap:10px;cursor:pointer}
+.card-thumb{
+  width:44px;height:44px;border-radius:9px;
+  background:linear-gradient(145deg,var(--navy-600),var(--navy-500));
+  border:1px solid var(--border2);
+  flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;
+}
+.card-thumb svg{width:86%;height:86%}
+.card-info{flex:1;min-width:0}
+.card-phase{font-family:var(--display);font-size:9px;letter-spacing:2px;margin-bottom:2px;font-weight:600}
+.card-name{font-family:var(--display);font-size:14px;font-weight:600;line-height:1.3;color:var(--text)}
+.card-equip{color:var(--text3);font-size:10px;margin-top:1px}
+.card-meta{text-align:right;flex-shrink:0}
+.card-scheme{font-family:var(--display);font-size:13px;font-weight:600;color:var(--text)}
+.card-prog{font-size:10px;color:var(--text3);margin-top:2px}
+.card-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--navy-500);border:1px solid var(--border2);
+  flex-shrink:0;transition:all 0.3s;
+}
+.ex-card.complete .card-dot{background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 6px rgba(0,212,255,0.6)}
+.ex-card.complete .card-prog{color:var(--cyan)}
+
+.log-area{padding:0 13px 13px;border-top:1px solid var(--border)}
+.log-hdr{display:flex;justify-content:space-between;padding:9px 0 7px}
+.log-col{color:var(--text4);font-family:var(--display);font-size:10px;letter-spacing:1px;font-weight:600}
+
+.set-row{display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.set-num{color:var(--text4);font-size:10px;width:16px;font-family:var(--display)}
+.set-inputs{
+  display:flex;align-items:center;
+  background:rgba(6,13,26,0.6);
+  border:1px solid var(--border2);
+  border-radius:9px;overflow:hidden;flex:1;
+}
+.set-input{
+  background:none;border:none;color:var(--text);width:50%;
+  padding:9px 10px;font-size:16px;font-family:var(--mono);
+  outline:none;text-align:center;
+}
+.set-input:focus{color:var(--cyan)}
+.set-div{width:1px;height:30px;background:var(--border2);flex-shrink:0}
+.set-vol{color:var(--text4);font-size:10px;width:26px;text-align:center;font-family:var(--display)}
+.set-del{background:none;border:none;color:var(--text4);font-size:15px;padding:3px;transition:color 0.15s}
+.set-del:active{color:var(--coral)}
+
+.log-actions{display:flex;gap:7px;margin-top:10px}
+.log-add-btn{
+  flex:1;
+  background:rgba(0,212,255,0.06);
+  border:1px solid rgba(0,212,255,0.25);
+  color:var(--cyan);border-radius:9px;padding:11px;
+  font-family:var(--display);font-size:12px;letter-spacing:2px;font-weight:700;
+  transition:all 0.15s;
+}
+.log-add-btn:active{background:rgba(0,212,255,0.12);box-shadow:0 0 12px rgba(0,212,255,0.2)}
+.swap-btn{
+  background:var(--navy-700);border:1px solid var(--border2);
+  color:var(--text3);border-radius:9px;padding:11px 13px;font-size:13px;
+  transition:all 0.15s;
+}
+.swap-btn:active{color:var(--cyan);border-color:rgba(0,212,255,0.3)}
+
+.prog-section{margin-top:20px}
+.prog-sec-label{
+  color:var(--text4);font-family:var(--display);font-size:10px;
+  letter-spacing:2px;margin-bottom:10px;font-weight:600;
+}
+.prog-grid{display:flex;flex-wrap:wrap;gap:7px}
+.prog-btn{
+  background:var(--navy-800);
+  border:1px solid var(--border);
+  color:var(--text3);border-radius:9px;padding:8px 11px;
+  font-size:10px;font-family:var(--display);font-weight:600;letter-spacing:0.5px;
+  transition:all 0.15s;
+}
+.prog-btn:active{border-color:var(--cyan);color:var(--cyan)}
+
+/* REST DAY */
+.rest-day{text-align:center;padding:80px 20px;color:var(--text4)}
+.rest-emoji{font-size:40px;margin-bottom:14px}
+.rest-label{font-family:var(--display);font-size:16px;letter-spacing:4px;font-weight:700;color:var(--text3)}
+.rest-note{color:var(--text4);font-size:11px;margin-top:8px}
+
+/* RUN NOTE */
+.run-note{
+  background:linear-gradient(135deg,rgba(212,168,67,0.06),rgba(10,22,40,0.9));
+  border:1px solid rgba(212,168,67,0.25);
+  border-radius:13px;padding:14px;margin-top:8px;
+  box-shadow:0 0 15px rgba(212,168,67,0.05);
+}
+.run-note-lbl{
+  color:var(--gold);font-family:var(--display);
+  font-size:10px;letter-spacing:2px;margin-bottom:7px;font-weight:700;
+}
+.run-note-txt{color:var(--text2);font-size:11px;line-height:1.7}
+
+/* TIMER OVERLAY */
+#timer-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(6,13,26,0.92);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  z-index:200;flex-direction:column;align-items:center;justify-content:center
+}
+#timer-overlay.show{display:flex}
+#timer-lbl{
+  color:var(--text3);font-family:var(--display);
+  font-size:11px;letter-spacing:4px;margin-bottom:24px;font-weight:600;
+}
+#timer-wrap{position:relative;width:130px;height:130px;display:flex;align-items:center;justify-content:center}
+#timer-svg{position:absolute;transform:rotate(-90deg)}
+#timer-num{
+  font-family:var(--display);font-size:42px;font-weight:700;
+  letter-spacing:-1px;position:relative;z-index:1;
+  color:var(--text);text-shadow:0 0 20px rgba(0,212,255,0.3);
+}
+#timer-presets{display:flex;gap:8px;margin-top:28px}
+.t-pre{
+  background:var(--navy-700);border:1px solid var(--border2);color:var(--text2);
+  border-radius:7px;padding:8px 13px;
+  font-family:var(--display);font-size:13px;font-weight:600;letter-spacing:1px;
+  transition:all 0.15s;
+}
+.t-pre.act{
+  background:rgba(0,212,255,0.1);border-color:var(--cyan);color:var(--cyan);
+  box-shadow:0 0 10px rgba(0,212,255,0.2);
+}
+#timer-btns{display:flex;gap:10px;margin-top:14px}
+.t-btn{
+  background:var(--navy-700);border:1px solid var(--border2);color:var(--text);
+  border-radius:9px;padding:12px 26px;
+  font-family:var(--display);font-size:14px;font-weight:700;letter-spacing:1px;
+  transition:all 0.15s;
+}
+.t-btn:active{background:var(--navy-600)}
+#timer-close{
+  margin-top:22px;background:none;border:none;
+  color:var(--text3);font-family:var(--display);font-size:12px;letter-spacing:2px;font-weight:600;
+  transition:color 0.15s;
+}
+#timer-close:active{color:var(--text2)}
+
+/* PROGRESS OVERLAY */
+#prog-overlay{
+  display:none;position:fixed;inset:0;background:var(--navy-900);
+  background-image:radial-gradient(ellipse at 20% 0%,rgba(26,53,102,0.5) 0%,transparent 60%);
+  z-index:190;flex-direction:column;overflow:hidden
+}
+#prog-overlay.show{display:flex}
+#prog-hdr{
+  padding:calc(var(--safe-top)+14px) 20px 14px;
+  display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid var(--border);flex-shrink:0;
+  background:rgba(6,13,26,0.8);backdrop-filter:blur(10px);
+}
+#prog-back{background:none;border:none;color:var(--text3);font-size:22px;padding:0 6px 0 0;transition:color 0.15s}
+#prog-back:active{color:var(--cyan)}
+#prog-body{flex:1;overflow-y:auto;padding:20px}
+#prog-chart{position:relative;height:160px;margin-bottom:20px}
+#prog-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px}
+.s-box{
+  background:linear-gradient(145deg,var(--navy-700),var(--navy-800));
+  border-radius:11px;padding:13px;
+  border:1px solid var(--border);text-align:center;
+  box-shadow:0 3px 10px rgba(0,0,0,0.3);
+}
+.s-lbl{color:var(--text3);font-family:var(--display);font-size:9px;letter-spacing:2px;margin-bottom:6px;font-weight:600}
+.s-val{color:var(--text);font-family:var(--display);font-size:19px;font-weight:700}
+.h-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:11px 13px;
+  background:linear-gradient(135deg,var(--navy-800),var(--navy-700));
+  border-radius:9px;margin-bottom:5px;
+  border:1px solid var(--border);
+}
+.h-date{color:var(--text2);font-size:11px}
+.h-weight{color:var(--text);font-family:var(--display);font-size:14px;font-weight:700}
+.h-sets{color:var(--text3);font-size:10px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <div id="header-top">
+      <div>
+        <div id="day-title"></div>
+        <div id="day-sub"></div>
+      </div>
+      <div id="header-actions">
+        <span id="today-badge" style="display:none">TODAY</span>
+        <button class="hdr-btn" onclick="openTimer()">⏱</button>
+      </div>
+    </div>
+    <div id="day-pills"></div>
+  </div>
+  <div id="content"></div>
+</div>
+
+<!-- Timer -->
+<div id="timer-overlay">
+  <div id="timer-lbl">REST TIMER</div>
+  <div id="timer-wrap">
+    <svg id="timer-svg" width="120" height="120">
+      <circle cx="60" cy="60" r="42" fill="none" stroke="rgba(30,64,128,0.4)" stroke-width="6"/>
+      <circle id="timer-arc" cx="60" cy="60" r="42" fill="none" stroke="#00d4ff" stroke-width="6" stroke-linecap="round"/>
+    </svg>
+    <div id="timer-num">1:30</div>
+  </div>
+  <div id="timer-presets">
+    <button class="t-pre" onclick="setTimer(60,this)">60s</button>
+    <button class="t-pre act" onclick="setTimer(90,this)">90s</button>
+    <button class="t-pre" onclick="setTimer(120,this)">120s</button>
+    <button class="t-pre" onclick="setTimer(180,this)">180s</button>
+  </div>
+  <div id="timer-btns">
+    <button class="t-btn" id="pause-btn" onclick="toggleTimer()">PAUSE</button>
+    <button class="t-btn" style="color:#888" onclick="resetTimer()">RESET</button>
+  </div>
+  <button id="timer-close" onclick="closeTimer()">CLOSE</button>
+</div>
+
+<!-- Progress -->
+<div id="prog-overlay">
+  <div id="prog-hdr">
+    <button id="prog-back" onclick="closeProgress()">←</button>
+    <div>
+      <div style="color:#4a6a9a;font-family:'Rajdhani',sans-serif;font-size:10px;letter-spacing:3px;font-weight:600">PROGRESS</div>
+      <div id="prog-title" style="font-size:16px;font-weight:700;font-family:'Rajdhani',sans-serif;letter-spacing:1px"></div>
+    </div>
+  </div>
+  <div id="prog-body">
+    <div id="prog-chart"></div>
+    <div id="prog-stats"></div>
+    <div style="color:#333;font-size:10px;letter-spacing:2px;margin-bottom:10px">HISTORY</div>
+    <div id="prog-hist"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+// SVG ILLUSTRATIONS
+// Each returns an SVG string drawn as a simple clean figure
+// ════════════════════════════════════════════════════════
+const SVG = {
+  // ── PUSH ──────────────────────────────────────────────
+  bench: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- bench -->
+    <rect x="10" y="52" width="60" height="5" rx="2" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+    <rect x="14" y="57" width="4" height="12" rx="1" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+    <rect x="62" y="57" width="4" height="12" rx="1" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+    <!-- barbell -->
+    <rect x="8" y="30" width="64" height="5" rx="2" fill="#555" stroke="#888" stroke-width="1"/>
+    <rect x="6" y="27" width="7" height="11" rx="2" fill="#2E75B6" stroke="#1a5a9a" stroke-width="1"/>
+    <rect x="67" y="27" width="7" height="11" rx="2" fill="#2E75B6" stroke="#1a5a9a" stroke-width="1"/>
+    <!-- person lying -->
+    <circle cx="40" cy="48" r="5" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="25" y="45" width="30" height="9" rx="4" fill="#aaa" stroke="#888" stroke-width="1"/>
+    <!-- arms up -->
+    <line x1="28" y1="47" x2="16" y2="33" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="52" y1="47" x2="64" y2="33" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+  </svg>`,
+
+  incline: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- incline bench -->
+    <rect x="8" y="50" width="38" height="5" rx="2" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+    <rect x="44" y="35" width="28" height="5" rx="2" fill="#2a2a2a" stroke="#444" stroke-width="1" transform="rotate(-30 44 35)"/>
+    <rect x="12" y="55" width="4" height="12" rx="1" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+    <rect x="42" y="55" width="4" height="12" rx="1" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+    <!-- person on incline -->
+    <circle cx="58" cy="24" r="5" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="30" y="34" width="32" height="9" rx="4" fill="#aaa" stroke="#888" stroke-width="1" transform="rotate(-30 46 38)"/>
+    <!-- dumbbells in hands -->
+    <rect x="14" y="28" width="12" height="4" rx="2" fill="#555" stroke="#888" stroke-width="1"/>
+    <rect x="12" y="26" width="4" height="8" rx="1" fill="#2E75B6"/>
+    <rect x="22" y="26" width="4" height="8" rx="1" fill="#2E75B6"/>
+    <!-- arms -->
+    <line x1="44" y1="34" x2="26" y2="30" stroke="#aaa" stroke-width="2.5" stroke-linecap="round"/>
+  </svg>`,
+
+  dips: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- dip bars -->
+    <rect x="10" y="30" width="5" height="30" rx="2" fill="#444" stroke="#666" stroke-width="1"/>
+    <rect x="65" y="30" width="5" height="30" rx="2" fill="#444" stroke="#666" stroke-width="1"/>
+    <rect x="6" y="28" width="15" height="5" rx="2" fill="#666" stroke="#888" stroke-width="1"/>
+    <rect x="59" y="28" width="15" height="5" rx="2" fill="#666" stroke="#888" stroke-width="1"/>
+    <!-- person -->
+    <circle cx="40" cy="18" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="32" y="24" width="16" height="18" rx="4" fill="#aaa" stroke="#888" stroke-width="1"/>
+    <!-- arms on bars -->
+    <line x1="33" y1="30" x2="18" y2="33" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="47" y1="30" x2="62" y2="33" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <!-- legs down -->
+    <line x1="36" y1="42" x2="33" y2="60" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="44" y1="42" x2="47" y2="60" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+  </svg>`,
+
+  lateral: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- person standing -->
+    <circle cx="40" cy="16" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="33" y="22" width="14" height="20" rx="4" fill="#aaa" stroke="#888" stroke-width="1"/>
+    <!-- legs -->
+    <line x1="37" y1="42" x2="34" y2="62" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="43" y1="42" x2="46" y2="62" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <!-- arms raised laterally with dumbbells -->
+    <line x1="33" y1="28" x2="12" y2="22" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="47" y1="28" x2="68" y2="22" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <rect x="6" y="19" width="10" height="4" rx="2" fill="#555" stroke="#888" stroke-width="1"/>
+    <rect x="5" y="17" width="3" height="8" rx="1" fill="#2E75B6"/>
+    <rect x="13" y="17" width="3" height="8" rx="1" fill="#2E75B6"/>
+    <rect x="64" y="19" width="10" height="4" rx="2" fill="#555" stroke="#888" stroke-width="1"/>
+    <rect x="63" y="17" width="3" height="8" rx="1" fill="#2E75B6"/>
+    <rect x="71" y="17" width="3" height="8" rx="1" fill="#2E75B6"/>
+  </svg>`,
+
+  pullapart: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- person standing -->
+    <circle cx="40" cy="16" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="33" y="22" width="14" height="20" rx="4" fill="#aaa" stroke="#888" stroke-width="1"/>
+    <line x1="37" y1="42" x2="34" y2="62" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="43" y1="42" x2="46" y2="62" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <!-- arms forward with band -->
+    <line x1="33" y1="30" x2="14" y2="30" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="47" y1="30" x2="66" y2="30" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <!-- resistance band -->
+    <path d="M14 30 Q40 24 66 30" stroke="#C55A11" stroke-width="2.5" fill="none" stroke-dasharray="3 2"/>
+  </svg>`,
+
+  skull: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- bench -->
+    <rect x="10" y="55" width="60" height="5" rx="2" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+    <rect x="14" y="60" width="4" height="10" rx="1" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+    <rect x="62" y="60" width="4" height="10" rx="1" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+    <!-- person lying -->
+    <circle cx="40" cy="51" r="5" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="25" y="48" width="30" height="9" rx="4" fill="#aaa" stroke="#888" stroke-width="1"/>
+    <!-- EZ bar above forehead -->
+    <rect x="22" y="28" width="36" height="4" rx="2" fill="#555" stroke="#888" stroke-width="1"/>
+    <rect x="19" y="25" width="5" height="10" rx="1" fill="#2E75B6"/>
+    <rect x="56" y="25" width="5" height="10" rx="1" fill="#2E75B6"/>
+    <!-- forearms vertical -->
+    <line x1="32" y1="47" x2="30" y2="32" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="48" y1="47" x2="50" y2="32" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+  </svg>`,
+
+  // ── PULL ──────────────────────────────────────────────
+  tbar: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- t-bar -->
+    <rect x="36" y="50" width="8" height="18" rx="2" fill="#555" stroke="#888" stroke-width="1"/>
+    <rect x="20" y="46" width="40" height="6" rx="2" fill="#555" stroke="#888" stroke-width="1"/>
+    <rect x="16" y="43" width="8" height="12" rx="2" fill="#2E75B6"/>
+    <rect x="56" y="43" width="8" height="12" rx="2" fill="#2E75B6"/>
+    <!-- person bent over -->
+    <circle cx="40" cy="18" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="30" y="24" width="20" height="14" rx="4" fill="#aaa" stroke="#888" stroke-width="1" transform="rotate(30 40 31)"/>
+    <!-- arms pulling -->
+    <line x1="35" y1="30" x2="30" y2="46" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="45" y1="30" x2="50" y2="46" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <!-- legs -->
+    <line x1="38" y1="36" x2="30" y2="58" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="44" y1="36" x2="52" y2="56" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+  </svg>`,
+
+  bbrow: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- barbell -->
+    <rect x="10" y="52" width="60" height="5" rx="2" fill="#555" stroke="#888" stroke-width="1"/>
+    <rect x="6" y="49" width="8" height="11" rx="2" fill="#2E75B6"/>
+    <rect x="66" y="49" width="8" height="11" rx="2" fill="#2E75B6"/>
+    <!-- person bent over -->
+    <circle cx="40" cy="16" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <!-- torso angled -->
+    <rect x="30" y="22" width="18" height="14" rx="4" fill="#aaa" stroke="#888" stroke-width="1" transform="rotate(40 39 29)"/>
+    <!-- arms down to bar -->
+    <line x1="34" y1="30" x2="28" y2="52" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="46" y1="28" x2="52" y2="52" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <!-- legs -->
+    <line x1="36" y1="35" x2="28" y2="60" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="44" y1="35" x2="52" y2="60" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+  </svg>`,
+
+  pulldown: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- cable from top -->
+    <line x1="40" y1="4" x2="40" y2="20" stroke="#666" stroke-width="2"/>
+    <!-- bar -->
+    <rect x="12" y="18" width="56" height="5" rx="2" fill="#555" stroke="#888" stroke-width="1"/>
+    <!-- person seated -->
+    <circle cx="40" cy="36" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="33" y="42" width="14" height="16" rx="4" fill="#aaa" stroke="#888" stroke-width="1"/>
+    <!-- seat -->
+    <rect x="28" y="58" width="24" height="5" rx="2" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+    <!-- arms up to bar -->
+    <line x1="34" y1="42" x2="18" y2="22" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="46" y1="42" x2="62" y2="22" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <!-- legs -->
+    <line x1="37" y1="58" x2="30" y2="72" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="43" y1="58" x2="50" y2="72" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+  </svg>`,
+
+  pullup: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- pull-up bar -->
+    <rect x="8" y="12" width="64" height="6" rx="3" fill="#555" stroke="#888" stroke-width="1"/>
+    <rect x="6" y="8" width="5" height="14" rx="2" fill="#444" stroke="#666" stroke-width="1"/>
+    <rect x="69" y="8" width="5" height="14" rx="2" fill="#444" stroke="#666" stroke-width="1"/>
+    <!-- person hanging / pulling up -->
+    <circle cx="40" cy="30" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="33" y="36" width="14" height="16" rx="4" fill="#aaa" stroke="#888" stroke-width="1"/>
+    <!-- arms up gripping bar -->
+    <line x1="34" y1="36" x2="24" y2="18" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="46" y1="36" x2="56" y2="18" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <!-- legs slightly bent -->
+    <line x1="37" y1="52" x2="34" y2="68" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="43" y1="52" x2="46" y2="68" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+  </svg>`,
+
+  facepull: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- anchor point -->
+    <rect x="4" y="28" width="6" height="10" rx="1" fill="#444" stroke="#666" stroke-width="1"/>
+    <!-- band -->
+    <path d="M10 33 Q30 33 40 38" stroke="#C55A11" stroke-width="2.5" fill="none" stroke-dasharray="3 2"/>
+    <path d="M10 33 Q30 33 40 28" stroke="#C55A11" stroke-width="2.5" fill="none" stroke-dasharray="3 2"/>
+    <!-- person -->
+    <circle cx="55" cy="22" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="48" y="28" width="14" height="18" rx="4" fill="#aaa" stroke="#888" stroke-width="1"/>
+    <line x1="50" y1="46" x2="46" y2="66" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="58" y1="46" x2="62" y2="66" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <!-- arms pulling to face -->
+    <line x1="49" y1="34" x2="40" y2="33" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="49" y1="34" x2="40" y2="29" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+  </svg>`,
+
+  ezcurl: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- person standing -->
+    <circle cx="40" cy="14" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="33" y="20" width="14" height="20" rx="4" fill="#aaa" stroke="#888" stroke-width="1"/>
+    <line x1="37" y1="40" x2="33" y2="62" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="43" y1="40" x2="47" y2="62" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <!-- EZ bar curled up -->
+    <path d="M20 46 Q22 42 26 42 Q30 42 32 38 Q34 34 38 34" stroke="#555" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M60 46 Q58 42 54 42 Q50 42 48 38 Q46 34 42 34" stroke="#555" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <rect x="17" y="43" width="6" height="8" rx="1" fill="#2E75B6"/>
+    <rect x="57" y="43" width="6" height="8" rx="1" fill="#2E75B6"/>
+    <!-- arms bent -->
+    <line x1="34" y1="30" x2="24" y2="44" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="46" y1="30" x2="56" y2="44" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+  </svg>`,
+
+  // ── LEGS ──────────────────────────────────────────────
+  squat: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- barbell on back -->
+    <rect x="8" y="30" width="64" height="5" rx="2" fill="#555" stroke="#888" stroke-width="1"/>
+    <rect x="5" y="27" width="7" height="11" rx="2" fill="#2E75B6"/>
+    <rect x="68" y="27" width="7" height="11" rx="2" fill="#2E75B6"/>
+    <!-- person squatting -->
+    <circle cx="40" cy="22" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="33" y="28" width="14" height="10" rx="3" fill="#aaa" stroke="#888" stroke-width="1"/>
+    <!-- thighs angled out in squat -->
+    <line x1="36" y1="38" x2="22" y2="52" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <line x1="44" y1="38" x2="58" y2="52" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <!-- lower legs vertical -->
+    <line x1="22" y1="52" x2="20" y2="68" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <line x1="58" y1="52" x2="60" y2="68" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <!-- arms on bar -->
+    <line x1="33" y1="32" x2="20" y2="33" stroke="#aaa" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="47" y1="32" x2="60" y2="33" stroke="#aaa" stroke-width="2.5" stroke-linecap="round"/>
+  </svg>`,
+
+  rdl: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- barbell at hips/knees level -->
+    <rect x="8" y="50" width="64" height="5" rx="2" fill="#555" stroke="#888" stroke-width="1"/>
+    <rect x="5" y="47" width="7" height="11" rx="2" fill="#2E75B6"/>
+    <rect x="68" y="47" width="7" height="11" rx="2" fill="#2E75B6"/>
+    <!-- person hinged forward -->
+    <circle cx="40" cy="14" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <!-- torso horizontal -->
+    <rect x="28" y="20" width="24" height="11" rx="4" fill="#aaa" stroke="#888" stroke-width="1" transform="rotate(20 40 25)"/>
+    <!-- arms hanging to bar -->
+    <line x1="34" y1="26" x2="28" y2="50" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="48" y1="24" x2="52" y2="50" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <!-- legs mostly straight -->
+    <line x1="38" y1="32" x2="34" y2="62" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <line x1="44" y1="32" x2="48" y2="62" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+  </svg>`,
+
+  bss: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- bench for rear foot -->
+    <rect x="46" y="50" width="26" height="5" rx="2" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+    <rect x="49" y="55" width="4" height="10" rx="1" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+    <rect x="66" y="55" width="4" height="10" rx="1" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+    <!-- person in split squat -->
+    <circle cx="26" cy="14" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="19" y="20" width="14" height="18" rx="4" fill="#aaa" stroke="#888" stroke-width="1"/>
+    <!-- front leg bent -->
+    <line x1="22" y1="38" x2="14" y2="52" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <line x1="14" y1="52" x2="14" y2="68" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <!-- rear leg on bench -->
+    <line x1="30" y1="38" x2="52" y2="50" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <!-- dumbbells -->
+    <rect x="8" y="32" width="10" height="4" rx="2" fill="#555" stroke="#888" stroke-width="1"/>
+    <rect x="7" y="30" width="3" height="8" rx="1" fill="#2E75B6"/>
+    <rect x="15" y="30" width="3" height="8" rx="1" fill="#2E75B6"/>
+  </svg>`,
+
+  stepup: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- box -->
+    <rect x="28" y="46" width="36" height="20" rx="2" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+    <rect x="28" y="44" width="36" height="5" rx="2" fill="#333" stroke="#555" stroke-width="1"/>
+    <!-- person stepping up -->
+    <circle cx="36" cy="14" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="29" y="20" width="14" height="18" rx="4" fill="#aaa" stroke="#888" stroke-width="1"/>
+    <!-- lead leg on box -->
+    <line x1="32" y1="38" x2="36" y2="48" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <line x1="36" y1="48" x2="38" y2="65" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <!-- trail leg behind -->
+    <line x1="40" y1="38" x2="24" y2="54" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <line x1="24" y1="54" x2="20" y2="68" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <!-- dumbbells -->
+    <rect x="14" y="28" width="10" height="4" rx="2" fill="#555" stroke="#888" stroke-width="1"/>
+    <rect x="13" y="26" width="3" height="8" rx="1" fill="#2E75B6"/>
+    <rect x="21" y="26" width="3" height="8" rx="1" fill="#2E75B6"/>
+  </svg>`,
+
+  calf: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- rack uprights for support -->
+    <rect x="8" y="10" width="4" height="60" rx="1" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+    <rect x="68" y="10" width="4" height="60" rx="1" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+    <!-- barbell -->
+    <rect x="10" y="26" width="60" height="5" rx="2" fill="#555" stroke="#888" stroke-width="1"/>
+    <rect x="7" y="23" width="6" height="11" rx="1" fill="#2E75B6"/>
+    <rect x="67" y="23" width="6" height="11" rx="1" fill="#2E75B6"/>
+    <!-- person on toes -->
+    <circle cx="40" cy="20" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="33" y="26" width="14" height="18" rx="4" fill="#aaa" stroke="#888" stroke-width="1"/>
+    <!-- legs straight -->
+    <line x1="37" y1="44" x2="35" y2="62" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <line x1="43" y1="44" x2="45" y2="62" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <!-- on toes -->
+    <line x1="35" y1="62" x2="30" y2="68" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="45" y1="62" x2="50" y2="68" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+  </svg>`,
+
+  // ── FULL BODY ──────────────────────────────────────────
+  rackpull: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- rack pins -->
+    <rect x="8" y="10" width="4" height="60" rx="1" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+    <rect x="68" y="10" width="4" height="60" rx="1" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+    <rect x="8" y="42" width="14" height="4" rx="1" fill="#555" stroke="#777" stroke-width="1"/>
+    <rect x="58" y="42" width="14" height="4" rx="1" fill="#555" stroke="#777" stroke-width="1"/>
+    <!-- barbell at knee height -->
+    <rect x="10" y="44" width="60" height="6" rx="2" fill="#555" stroke="#888" stroke-width="1"/>
+    <rect x="6" y="41" width="8" height="12" rx="2" fill="#2E75B6"/>
+    <rect x="66" y="41" width="8" height="12" rx="2" fill="#2E75B6"/>
+    <!-- person pulling -->
+    <circle cx="40" cy="18" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="32" y="24" width="16" height="16" rx="4" fill="#aaa" stroke="#888" stroke-width="1" transform="rotate(15 40 32)"/>
+    <line x1="35" y1="32" x2="28" y2="46" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="45" y1="32" x2="52" y2="46" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="37" y1="36" x2="32" y2="62" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <line x1="43" y1="36" x2="48" y2="62" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+  </svg>`,
+
+  wtpullup: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- bar -->
+    <rect x="8" y="10" width="64" height="6" rx="3" fill="#555" stroke="#888" stroke-width="1"/>
+    <rect x="6" y="6" width="5" height="14" rx="2" fill="#444" stroke="#666" stroke-width="1"/>
+    <rect x="69" y="6" width="5" height="14" rx="2" fill="#444" stroke="#666" stroke-width="1"/>
+    <!-- weighted vest detail -->
+    <circle cx="40" cy="30" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="31" y="36" width="18" height="18" rx="4" fill="#555" stroke="#888" stroke-width="1"/>
+    <text x="40" y="48" text-anchor="middle" font-size="7" fill="#2E75B6" font-family="monospace">20lb</text>
+    <!-- arms -->
+    <line x1="32" y1="38" x2="22" y2="16" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="48" y1="38" x2="58" y2="16" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <!-- legs bent -->
+    <line x1="37" y1="54" x2="32" y2="66" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="43" y1="54" x2="48" y2="66" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+  </svg>`,
+
+  pushpress: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- barbell overhead -->
+    <rect x="8" y="16" width="64" height="5" rx="2" fill="#555" stroke="#888" stroke-width="1"/>
+    <rect x="5" y="13" width="7" height="11" rx="2" fill="#2E75B6"/>
+    <rect x="68" y="13" width="7" height="11" rx="2" fill="#2E75B6"/>
+    <!-- person pressing overhead -->
+    <circle cx="40" cy="32" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="33" y="38" width="14" height="16" rx="4" fill="#aaa" stroke="#888" stroke-width="1"/>
+    <!-- arms up -->
+    <line x1="34" y1="40" x2="18" y2="21" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="46" y1="40" x2="62" y2="21" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <!-- slight knee bend -->
+    <line x1="37" y1="54" x2="33" y2="68" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <line x1="43" y1="54" x2="47" y2="68" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+  </svg>`,
+
+  kbswing: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- kettlebell at chest height -->
+    <rect x="32" y="28" width="16" height="14" rx="3" fill="#333" stroke="#666" stroke-width="1.5"/>
+    <path d="M36 28 Q40 22 44 28" stroke="#666" stroke-width="2" fill="none"/>
+    <!-- person standing/hinging -->
+    <circle cx="40" cy="12" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="33" y="18" width="14" height="16" rx="4" fill="#aaa" stroke="#888" stroke-width="1"/>
+    <!-- arms forward holding KB -->
+    <line x1="34" y1="26" x2="33" y2="34" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="46" y1="26" x2="47" y2="34" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <!-- legs -->
+    <line x1="37" y1="34" x2="30" y2="58" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <line x1="43" y1="34" x2="50" y2="58" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <!-- motion lines -->
+    <line x1="20" y1="44" x2="14" y2="44" stroke="#C55A11" stroke-width="1.5" stroke-dasharray="2 2"/>
+    <line x1="60" y1="44" x2="66" y2="44" stroke="#C55A11" stroke-width="1.5" stroke-dasharray="2 2"/>
+  </svg>`,
+
+  farmercarry: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- person walking -->
+    <circle cx="40" cy="12" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="33" y="18" width="14" height="18" rx="4" fill="#aaa" stroke="#888" stroke-width="1"/>
+    <!-- arms down holding dumbbells -->
+    <line x1="33" y1="24" x2="18" y2="38" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="47" y1="24" x2="62" y2="38" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <!-- dumbbells heavy -->
+    <rect x="10" y="36" width="14" height="6" rx="2" fill="#555" stroke="#888" stroke-width="1"/>
+    <rect x="8" y="33" width="4" height="12" rx="1" fill="#2E75B6"/>
+    <rect x="20" y="33" width="4" height="12" rx="1" fill="#2E75B6"/>
+    <rect x="56" y="36" width="14" height="6" rx="2" fill="#555" stroke="#888" stroke-width="1"/>
+    <rect x="54" y="33" width="4" height="12" rx="1" fill="#2E75B6"/>
+    <rect x="66" y="33" width="4" height="12" rx="1" fill="#2E75B6"/>
+    <!-- walking legs -->
+    <line x1="37" y1="36" x2="28" y2="56" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <line x1="43" y1="36" x2="52" y2="52" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <line x1="28" y1="56" x2="24" y2="68" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="52" y1="52" x2="56" y2="66" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+  </svg>`,
+
+  hangleg: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- bar -->
+    <rect x="8" y="8" width="64" height="6" rx="3" fill="#555" stroke="#888" stroke-width="1"/>
+    <!-- straps -->
+    <rect x="30" y="14" width="3" height="12" rx="1" fill="#888"/>
+    <rect x="47" y="14" width="3" height="12" rx="1" fill="#888"/>
+    <path d="M28 26 Q31 30 34 28" stroke="#888" stroke-width="2" fill="none"/>
+    <path d="M52 26 Q49 30 46 28" stroke="#888" stroke-width="2" fill="none"/>
+    <!-- person hanging, knees raised -->
+    <circle cx="40" cy="32" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="33" y="38" width="14" height="14" rx="4" fill="#aaa" stroke="#888" stroke-width="1"/>
+    <!-- arms up to straps -->
+    <line x1="34" y1="38" x2="31" y2="26" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="46" y1="38" x2="49" y2="26" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <!-- knees raised -->
+    <line x1="37" y1="52" x2="28" y2="62" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <line x1="43" y1="52" x2="52" y2="62" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <line x1="28" y1="62" x2="30" y2="74" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="52" y1="62" x2="50" y2="74" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+  </svg>`,
+
+  jrope: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- jump rope arc -->
+    <path d="M8 60 Q40 10 72 60" stroke="#C55A11" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <!-- person jumping -->
+    <circle cx="40" cy="20" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="33" y="26" width="14" height="16" rx="4" fill="#aaa" stroke="#888" stroke-width="1"/>
+    <!-- arms out holding handles -->
+    <line x1="33" y1="30" x2="16" y2="38" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="47" y1="30" x2="64" y2="38" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="14" cy="40" r="3" fill="#555" stroke="#888" stroke-width="1"/>
+    <circle cx="66" cy="40" r="3" fill="#555" stroke="#888" stroke-width="1"/>
+    <!-- legs slightly bent off ground -->
+    <line x1="37" y1="42" x2="33" y2="56" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="43" y1="42" x2="47" y2="56" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="33" y1="56" x2="28" y2="64" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="47" y1="56" x2="52" y2="64" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+  </svg>`,
+
+  // ── RUN ───────────────────────────────────────────────
+  run_a: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- path / road -->
+    <path d="M4 68 Q20 60 40 64 Q60 68 76 58" stroke="#2a2a2a" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <!-- running figure -->
+    <circle cx="38" cy="16" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="31" y="22" width="14" height="14" rx="4" fill="#aaa" stroke="#888" stroke-width="1"/>
+    <!-- running arms -->
+    <line x1="32" y1="26" x2="20" y2="20" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="44" y1="26" x2="56" y2="32" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <!-- running legs stride -->
+    <line x1="36" y1="36" x2="24" y2="52" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <line x1="42" y1="36" x2="54" y2="48" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <line x1="24" y1="52" x2="18" y2="62" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="54" y1="48" x2="62" y2="58" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <!-- motion lines -->
+    <line x1="6" y1="30" x2="14" y2="30" stroke="#2d7a4f" stroke-width="1.5" stroke-dasharray="2 2"/>
+    <line x1="4" y1="36" x2="12" y2="36" stroke="#2d7a4f" stroke-width="1.5" stroke-dasharray="2 2"/>
+  </svg>`,
+
+  run_b: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- road -->
+    <path d="M4 68 Q20 60 40 64 Q60 68 76 58" stroke="#2a2a2a" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <!-- runner leaning more forward = faster -->
+    <circle cx="42" cy="14" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="34" y="20" width="14" height="14" rx="4" fill="#aaa" stroke="#888" stroke-width="1" transform="rotate(-15 41 27)"/>
+    <line x1="35" y1="24" x2="20" y2="16" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="46" y1="24" x2="60" y2="30" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="38" y1="32" x2="22" y2="48" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <line x1="44" y1="32" x2="60" y2="44" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <line x1="22" y1="48" x2="14" y2="60" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="60" y1="44" x2="68" y2="56" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <!-- more aggressive motion lines -->
+    <line x1="4" y1="26" x2="16" y2="26" stroke="#C55A11" stroke-width="1.5" stroke-dasharray="2 2"/>
+    <line x1="2" y1="32" x2="14" y2="32" stroke="#C55A11" stroke-width="1.5" stroke-dasharray="2 2"/>
+    <line x1="4" y1="38" x2="16" y2="38" stroke="#C55A11" stroke-width="1.5" stroke-dasharray="2 2"/>
+  </svg>`,
+
+  run_c: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- wavy path = fartlek surges -->
+    <path d="M4 68 Q14 56 24 64 Q34 72 44 58 Q54 44 76 58" stroke="#2a2a2a" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <circle cx="40" cy="14" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="33" y="20" width="14" height="14" rx="4" fill="#aaa" stroke="#888" stroke-width="1"/>
+    <line x1="33" y1="26" x2="18" y2="20" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="47" y1="26" x2="62" y2="32" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="37" y1="34" x2="24" y2="50" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <line x1="43" y1="34" x2="56" y2="48" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <line x1="24" y1="50" x2="18" y2="62" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="56" y1="48" x2="64" y2="60" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <!-- burst lines = surge -->
+    <line x1="66" y1="14" x2="76" y2="10" stroke="#7B3FA0" stroke-width="2"/>
+    <line x1="66" y1="20" x2="78" y2="20" stroke="#7B3FA0" stroke-width="2"/>
+    <line x1="66" y1="26" x2="76" y2="30" stroke="#7B3FA0" stroke-width="2"/>
+  </svg>`,
+
+  opt_run: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- gentle path -->
+    <path d="M4 70 Q40 62 76 66" stroke="#2a2a2a" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <!-- relaxed runner -->
+    <circle cx="38" cy="18" r="6" fill="#ccc" stroke="#999" stroke-width="1"/>
+    <rect x="31" y="24" width="14" height="14" rx="4" fill="#aaa" stroke="#888" stroke-width="1"/>
+    <line x1="32" y1="28" x2="22" y2="24" stroke="#aaa" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="44" y1="28" x2="54" y2="32" stroke="#aaa" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="36" y1="38" x2="26" y2="52" stroke="#aaa" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="42" y1="38" x2="52" y2="50" stroke="#aaa" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="26" y1="52" x2="22" y2="64" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="52" y1="50" x2="58" y2="62" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <!-- soft motion lines -->
+    <line x1="6" y1="34" x2="12" y2="34" stroke="#4a5568" stroke-width="1.5" stroke-dasharray="2 3"/>
+    <line x1="5" y1="40" x2="11" y2="40" stroke="#4a5568" stroke-width="1.5" stroke-dasharray="2 3"/>
+  </svg>`,
+};
+
+// fallback for anything not in SVG map
+function getSVG(id) {
+  return SVG[id] || `<svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="20" fill="#2a2a2a" stroke="#444" stroke-width="2"/><text x="40" y="46" text-anchor="middle" font-size="10" fill="#666" font-family="monospace">EX</text></svg>`;
+}
+
+// ════════════════════════════════════════════════════════
+// PROGRAM DATA
+// ════════════════════════════════════════════════════════
+const PROGRAM = {
+  Monday:{
+    id:"push",label:"PUSH",subtitle:"Chest · Shoulders · Triceps",color:"#2E75B6",
+    slots:[
+      {id:"bench",  name:"Barbell Bench Press",  equip:"Barbell + rack",    sets:4,reps:"5–6",  phase:"STRENGTH",
+       options:[{id:"bench",name:"Barbell Bench Press",equip:"Barbell + rack"},{id:"dips",name:"Weighted Dips",equip:"Dip bars + vest"},{id:"incline",name:"DB Bench Press",equip:"DB 60s + bench"}]},
+      {id:"incline", name:"Incline DB Press",     equip:"DB 35s + bench",    sets:3,reps:"8–10", phase:"STRENGTH",
+       options:[{id:"incline",name:"Incline DB Press",equip:"DB 35s + bench"},{id:"bench",name:"Incline Barbell Press",equip:"Barbell + rack"},{id:"skull",name:"Close-Grip BB Press",equip:"Barbell + rack"}]},
+      {id:"dips",   name:"Dips",                  equip:"Dip bars",          sets:3,reps:"10–15",phase:"HYPERTROPHY",
+       options:[{id:"dips",name:"Dips",equip:"Dip bars"},{id:"bench",name:"Weighted Dips (vest)",equip:"Dip bars + vest"},{id:"incline",name:"DB Floor Press",equip:"DB 60s"}]},
+      {id:"lateral",name:"DB Lateral Raise",      equip:"DB 10s or 15s",     sets:3,reps:"15–20",phase:"HYPERTROPHY",
+       options:[{id:"lateral",name:"DB Lateral Raise",equip:"DB 10s–15s"},{id:"pullapart",name:"Band Lateral Raise",equip:"Resistance band"},{id:"ezcurl",name:"EZ Bar Upright Row",equip:"EZ curl bar"}]},
+      {id:"pullapart",name:"Band Pull-Apart",      equip:"Resistance band",   sets:3,reps:"20",   phase:"HYPERTROPHY",
+       options:[{id:"pullapart",name:"Band Pull-Apart",equip:"Resistance band"},{id:"facepull",name:"Band Face Pull",equip:"Band + rack"},{id:"lateral",name:"DB Rear Delt Fly",equip:"DB 10s–15s"}]},
+      {id:"skull",  name:"EZ Bar Skull Crusher",   equip:"EZ curl bar",       sets:3,reps:"12",   phase:"FINISHER",
+       options:[{id:"skull",name:"EZ Bar Skull Crusher",equip:"EZ curl bar"},{id:"lateral",name:"DB OH Tricep Ext.",equip:"DB 25s"},{id:"dips",name:"Diamond Push-Ups (vest)",equip:"Weighted vest"}]},
+    ]
+  },
+  Tuesday:{
+    id:"pull",label:"PULL",subtitle:"Back · Biceps · Rear Delts",color:"#2E75B6",
+    slots:[
+      {id:"tbar",   name:"T-Bar Row",             equip:"T-bar attachment",  sets:4,reps:"6–8",  phase:"STRENGTH",
+       options:[{id:"tbar",name:"T-Bar Row",equip:"T-bar attachment"},{id:"bbrow",name:"Barbell Bent-Over Row",equip:"Barbell"},{id:"pullup",name:"DB Single-Arm Row",equip:"DB 60s"}]},
+      {id:"bbrow",  name:"Barbell Bent-Over Row",  equip:"Barbell",           sets:3,reps:"8",    phase:"STRENGTH",
+       options:[{id:"bbrow",name:"Barbell Bent-Over Row",equip:"Barbell"},{id:"tbar",name:"DB Single-Arm Row",equip:"DB 60s"},{id:"pulldown",name:"Chest-Supported Row",equip:"DB 35s + bench"}]},
+      {id:"pulldown",name:"Lat Pulldown",          equip:"Rack attachment",   sets:3,reps:"10–12",phase:"HYPERTROPHY",
+       options:[{id:"pulldown",name:"Lat Pulldown",equip:"Rack attachment"},{id:"pullup",name:"Pull-Ups",equip:"Pull-up bar"},{id:"pulldown",name:"Chin-Ups (underhand)",equip:"Pull-up bar"}]},
+      {id:"pullup", name:"Pull-Ups / Chin-Ups",   equip:"Pull-up bar",       sets:3,reps:"Max",  phase:"HYPERTROPHY",
+       options:[{id:"pullup",name:"Pull-Ups",equip:"Pull-up bar"},{id:"wtpullup",name:"Weighted Pull-Ups",equip:"Pull-up bar + vest"},{id:"pulldown",name:"Band-Assisted Pull-Ups",equip:"Band + bar"}]},
+      {id:"facepull",name:"Band Face Pull",        equip:"Band + rack",       sets:3,reps:"20",   phase:"HYPERTROPHY",
+       options:[{id:"facepull",name:"Band Face Pull",equip:"Band + rack"},{id:"pullapart",name:"Band Pull-Apart",equip:"Resistance band"},{id:"lateral",name:"DB Rear Delt Fly",equip:"DB 10s–15s"}]},
+      {id:"ezcurl", name:"EZ Bar Curl",            equip:"EZ curl bar",       sets:3,reps:"12",   phase:"FINISHER",
+       options:[{id:"ezcurl",name:"EZ Bar Curl",equip:"EZ curl bar"},{id:"bbrow",name:"DB Hammer Curl (35s)",equip:"DB 35s"},{id:"pullup",name:"DB Supinating Curl",equip:"DB 25s"}]},
+    ]
+  },
+  Wednesday:{
+    id:"run",label:"RUN",subtitle:"3–5 Miles · Zone 2",color:"#C55A11",isRun:true,
+    slots:[
+      {id:"run_a",name:"Format A — Easy Zone 2",equip:"Outdoor",sets:1,reps:"3–5 mi",phase:"EASY",
+       options:[{id:"run_a",name:"Format A — Easy Zone 2",equip:"3–5 mi easy"},{id:"run_b",name:"Format B — Tempo",equip:"4–5 mi / weeks 5+"},{id:"run_c",name:"Format C — Fartlek",equip:"3–4 mi / weeks 9+"}]},
+    ]
+  },
+  Thursday:{
+    id:"legs",label:"LEGS",subtitle:"Quads · Hamstrings · Glutes · Calves",color:"#2E75B6",
+    slots:[
+      {id:"squat",  name:"Barbell Back Squat",     equip:"Barbell + rack",    sets:4,reps:"5",    phase:"STRENGTH",
+       options:[{id:"squat",name:"Barbell Back Squat",equip:"Barbell + rack"},{id:"rdl",name:"Barbell Front Squat",equip:"Barbell + rack"},{id:"bss",name:"Goblet Squat",equip:"KB 35 lb"}]},
+      {id:"rdl",    name:"Barbell Romanian Deadlift",equip:"Barbell",         sets:3,reps:"8–10", phase:"STRENGTH",
+       options:[{id:"rdl",name:"Barbell Romanian Deadlift",equip:"Barbell"},{id:"rackpull",name:"Barbell Conv. Deadlift",equip:"Barbell"},{id:"kbswing",name:"KB Single-Leg RDL",equip:"KB 35 lb"}]},
+      {id:"bss",    name:"DB Bulgarian Split Squat",equip:"DB 25s–35s + bench",sets:3,reps:"10 ea.",phase:"HYPERTROPHY",
+       options:[{id:"bss",name:"DB Bulgarian Split Squat",equip:"DB 25s–35s + bench"},{id:"stepup",name:"DB Reverse Lunge",equip:"DB 25s–35s"},{id:"farmercarry",name:"DB Walking Lunge",equip:"DB 25s–35s"}]},
+      {id:"stepup", name:"DB Step-Up",              equip:"DB 25s + box",      sets:3,reps:"12 ea.",phase:"HYPERTROPHY",
+       options:[{id:"stepup",name:"DB Step-Up",equip:"DB 25s + box"},{id:"kbswing",name:"Box Jump",equip:"Jump box"},{id:"bss",name:"Vest Step-Up",equip:"20 lb vest + box"}]},
+      {id:"calf",   name:"Standing Calf Raise",     equip:"Barbell in rack",   sets:4,reps:"20",   phase:"FINISHER",
+       options:[{id:"calf",name:"Standing Calf Raise",equip:"Barbell in rack"},{id:"stepup",name:"DB Single-Leg Calf Raise",equip:"DB 25s"},{id:"jrope",name:"BW Calf Raise × 30 (vest)",equip:"Weighted vest"}]},
+    ]
+  },
+  Friday:{
+    id:"fullbody",label:"FULL BODY",subtitle:"Strength + Conditioning",color:"#C55A11",
+    slots:[
+      {id:"rackpull",name:"Barbell Rack Pull",      equip:"Barbell + rack",    sets:3,reps:"5",    phase:"STRENGTH",
+       options:[{id:"rackpull",name:"Barbell Rack Pull",equip:"Barbell + rack"},{id:"rdl",name:"Barbell Deadlift",equip:"Barbell"},{id:"kbswing",name:"KB Deadlift (35s)",equip:"KB 35s"}]},
+      {id:"wtpullup",name:"Weighted Pull-Up",        equip:"Pull-up bar + vest",sets:4,reps:"5–6",  phase:"STRENGTH",
+       options:[{id:"wtpullup",name:"Weighted Pull-Up (vest)",equip:"Pull-up bar + vest"},{id:"pullup",name:"Chin-Up (max effort)",equip:"Pull-up bar"},{id:"pulldown",name:"Lat Pulldown — heavy 3×5",equip:"Rack attachment"}]},
+      {id:"pushpress",name:"Barbell Push Press",     equip:"Barbell",           sets:3,reps:"6–8",  phase:"STRENGTH",
+       options:[{id:"pushpress",name:"Barbell Push Press",equip:"Barbell"},{id:"lateral",name:"DB Push Press (35s)",equip:"DB 35s"},{id:"bench",name:"DB Seated OH Press",equip:"DB 35s + bench"}]},
+      {id:"kbswing", name:"KB Swing",               equip:"KB 35 lb",          sets:5,reps:"20",   phase:"CONDITIONING",
+       options:[{id:"kbswing",name:"KB Swing (35 lb)",equip:"KB 35 lb"},{id:"bss",name:"KB Goblet Squat + Swing",equip:"KB 35 lb"},{id:"jrope",name:"Battle Rope 40s/20s",equip:"Battle ropes"}]},
+      {id:"farmercarry",name:"Farmer's Carry",       equip:"DB 60s or KB 35s",  sets:4,reps:"40 yds",phase:"CONDITIONING",
+       options:[{id:"farmercarry",name:"Farmer's Carry (DB 60s)",equip:"DB 60s"},{id:"kbswing",name:"Farmer's Carry (KB 35s)",equip:"KB 35s"},{id:"run_a",name:"Vest Walk — fast pace",equip:"20 lb vest"}]},
+      {id:"hangleg", name:"Hanging Leg Raise",       equip:"Ab straps",         sets:3,reps:"12–15",phase:"CONDITIONING",
+       options:[{id:"hangleg",name:"Hanging Leg Raise",equip:"Ab straps"},{id:"pullup",name:"Ab Wheel Rollout",equip:"Ab wheel"},{id:"kbswing",name:"Med Ball Slam × 15",equip:"15 lb med ball"}]},
+      {id:"jrope",   name:"Jump Rope Sprint",        equip:"Jump rope",         sets:5,reps:"30 sec",phase:"FINISHER",
+       options:[{id:"jrope",name:"Jump Rope Sprint",equip:"Jump rope"},{id:"stepup",name:"Box Jump × 8 × 5 rounds",equip:"Jump box"},{id:"kbswing",name:"Battle Rope All-Out 20s × 8",equip:"Battle ropes"}]},
+    ]
+  },
+  Saturday:{
+    id:"optrun",label:"REST / RUN",subtitle:"Optional easy run or full rest",color:"#4a5568",isOptional:true,
+    slots:[
+      {id:"opt_run",name:"Optional Easy Run",equip:"Outdoor",sets:1,reps:"3–5 mi",phase:"RECOVERY",
+       options:[{id:"opt_run",name:"Easy Run",equip:"3–5 miles easy"},{id:"run_a",name:"Vest Run (20 lb)",equip:"Weighted vest + outdoor"},{id:"jrope",name:"Skip — Full Rest",equip:"Rest day"}]},
+    ]
+  },
+  Sunday:{id:"rest",label:"REST",subtitle:"Full rest or mobility only",color:"#4a5568",isRest:true,slots:[]}
+};
+
+const DAYS=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const PHASE_COLORS={STRENGTH:"#d4a843",HYPERTROPHY:"#00d4ff",FINISHER:"#7a9cc8",CONDITIONING:"#d4a843",EASY:"#22c98a",TEMPO:"#d4a843",FARTLEK:"#9b7fd4",RECOVERY:"#4a6a9a"};
+
+// ════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════
+let activeDay=getTodayName();
+let viewMode="plan"; // "plan" | "workout"
+let selectedExercises={};   // slotId -> {id, name, equip}
+let expandedCards=new Set();
+
+// Timer
+const CIRC=2*Math.PI*42;
+let timerSecs=90,timerMax=90,timerRunning=false,timerInterval=null;
+
+// ════════════════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════════════════
+function getTodayName(){const d=new Date().getDay();return DAYS[d===0?6:d-1]}
+function todayStr(){return new Date().toISOString().slice(0,10)}
+function fmt(s){return`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`}
+
+// Storage
+function saveLog(date,dayId,exId,sets){localStorage.setItem(`log:${date}:${dayId}:${exId}`,JSON.stringify(sets))}
+function loadLog(date,dayId,exId){try{return JSON.parse(localStorage.getItem(`log:${date}:${dayId}:${exId}`))||[]}catch(e){return[]}}
+function loadAllLogs(exId){
+  const entries=[];
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(!k.startsWith('log:')||!k.endsWith(':'+exId))continue;
+    try{
+      const sets=JSON.parse(localStorage.getItem(k));
+      const date=k.split(':')[1];
+      const maxW=Math.max(...sets.map(s=>parseFloat(s.weight)||0));
+      if(maxW>0)entries.push({date,maxW,sets});
+    }catch(e){}
+  }
+  return entries.sort((a,b)=>a.date.localeCompare(b.date));
+}
+
+// ════════════════════════════════════════════════════════
+// TIMER
+// ════════════════════════════════════════════════════════
+function openTimer(){document.getElementById('timer-overlay').classList.add('show');if(!timerRunning)startTimerTick()}
+function closeTimer(){document.getElementById('timer-overlay').classList.remove('show')}
+function setTimer(s,el){
+  timerMax=s;timerSecs=s;timerRunning=true;clearInterval(timerInterval);
+  document.querySelectorAll('.t-pre').forEach(b=>b.classList.remove('act'));
+  if(el)el.classList.add('act');
+  startTimerTick();
+}
+function startTimerTick(){
+  clearInterval(timerInterval);timerRunning=true;
+  document.getElementById('pause-btn').textContent='PAUSE';
+  timerInterval=setInterval(()=>{
+    if(timerSecs>0){timerSecs--;updateTimerUI()}
+    else{clearInterval(timerInterval);timerRunning=false;document.getElementById('pause-btn').textContent='RESUME'}
+  },1000);
+  updateTimerUI();
+}
+function toggleTimer(){
+  if(timerRunning){clearInterval(timerInterval);timerRunning=false;document.getElementById('pause-btn').textContent='RESUME'}
+  else startTimerTick();
+}
+function resetTimer(){timerSecs=timerMax;timerRunning=true;startTimerTick()}
+function updateTimerUI(){
+  const pct=timerSecs/timerMax;
+  const arc=document.getElementById('timer-arc');
+  const num=document.getElementById('timer-num');
+  arc.style.strokeDasharray=CIRC;
+  arc.style.strokeDashoffset=CIRC*(1-pct);
+  arc.style.stroke=timerSecs<15?'#e05c4b':'#00d4ff';
+  arc.style.transition='stroke-dashoffset 1s linear,stroke 0.3s';
+  num.textContent=fmt(timerSecs);
+  num.style.color=timerSecs<15?'#C55A11':'#fff';
+}
+
+// ════════════════════════════════════════════════════════
+// PLAN VIEW — tile picker
+// ════════════════════════════════════════════════════════
+function selectTile(slotId,optId,optName,optEquip){
+  selectedExercises[slotId]={id:optId,name:optName,equip:optEquip};
+  renderContent();
+}
+
+function allSlotsSelected(){
+  const day=PROGRAM[activeDay];
+  if(!day.slots||day.slots.length===0)return true;
+  return day.slots.every(slot=>selectedExercises[slot.id]);
+}
+
+function startWorkout(){
+  // default unselected slots to their first option
+  const day=PROGRAM[activeDay];
+  day.slots.forEach(slot=>{
+    if(!selectedExercises[slot.id]){
+      const opt=slot.options[0];
+      selectedExercises[slot.id]={id:opt.id,name:slot.name,equip:slot.equip};
+    }
+  });
+  viewMode='workout';
+  expandedCards.clear();
+  renderContent();
+}
+
+function backToPlan(){viewMode='plan';renderContent()}
+
+function renderPlanView(){
+  const day=PROGRAM[activeDay];
+  const date=todayStr();
+  let html=`<div id="plan-view">`;
+
+  if(day.isRest){
+    html+=`<div class="rest-day"><div class="rest-emoji">🛌</div><div class="rest-label">REST DAY</div><div class="rest-note">Mobility, stretching, or full rest</div></div></div>`;
+    document.getElementById('content').innerHTML=html;return;
+  }
+
+  html+=`<div class="plan-intro">
+    <div class="plan-intro-title">BUILD YOUR SESSION</div>
+    <div class="plan-intro-text">Tap a tile to select the exercise for each slot. Defaults are pre-selected — change any you want, then hit Start.</div>
+  </div>`;
+
+  day.slots.forEach(slot=>{
+    const phaseColor=PHASE_COLORS[slot.phase]||'#888';
+    const sel=selectedExercises[slot.id];
+    html+=`<div class="plan-slot">
+      <div class="slot-label">
+        <div class="slot-phase-dot" style="background:${phaseColor}"></div>
+        <span class="slot-name" style="color:${phaseColor}">${slot.phase}</span>
+        <span style="color:#333">·</span>
+        <span class="slot-name">${slot.name}</span>
+      </div>
+      <div class="slot-tiles">`;
+
+    slot.options.forEach(opt=>{
+      const isSelected=sel ? sel.id===opt.id && sel.name===(opt.name||slot.name) : opt.id===slot.options[0].id && !sel;
+      // pre-select first option visually
+      const actualSel=sel ? (sel.name===opt.name) : (slot.options.indexOf(opt)===0);
+      const selClass=actualSel?(day.color==='#C55A11'?'selected-gold':'selected'):'';
+      html+=`<div class="ex-tile ${selClass}" onclick="selectTile('${slot.id}','${opt.id}',${JSON.stringify(opt.name)},${JSON.stringify(opt.equip)})">
+        <div class="tile-img">
+          <div class="tile-selected-check">✓</div>
+          ${getSVG(opt.id)}
+        </div>
+        <div class="tile-label">${opt.name}</div>
+      </div>`;
+    });
+
+    html+=`</div></div>`;
+  });
+
+  // pre-select defaults if nothing selected yet
+  day.slots.forEach(slot=>{
+    if(!selectedExercises[slot.id]){
+      const opt=slot.options[0];
+      selectedExercises[slot.id]={id:opt.id,name:slot.name,equip:slot.equip};
+    }
+  });
+
+  html+=`<button class="start-btn" onclick="startWorkout()">START WORKOUT →</button>`;
+  html+=`</div>`;
+  document.getElementById('content').innerHTML=html;
+}
+
+// ════════════════════════════════════════════════════════
+// WORKOUT VIEW — logging
+// ════════════════════════════════════════════════════════
+function addSet(slotId){
+  const day=PROGRAM[activeDay];
+  const date=todayStr();
+  const sel=selectedExercises[slotId];
+  const exId=sel?sel.id:slotId;
+  const sets=loadLog(date,day.id,exId);
+  const last=sets[sets.length-1];
+  sets.push({weight:last?.weight||'',reps:last?.reps||''});
+  saveLog(date,day.id,exId,sets);
+  renderWorkoutView();
+  timerSecs=timerMax;openTimer();
+}
+
+function updateSet(slotId,idx,field,val){
+  const day=PROGRAM[activeDay];
+  const date=todayStr();
+  const exId=(selectedExercises[slotId]||{}).id||slotId;
+  const sets=loadLog(date,day.id,exId);
+  if(!sets[idx])return;
+  sets[idx][field]=val;
+  saveLog(date,day.id,exId,sets);
+  const volEl=document.getElementById(`vol-${slotId}-${idx}`);
+  if(volEl){
+    const w=parseFloat(sets[idx].weight)||0,r=parseFloat(sets[idx].reps)||0;
+    volEl.textContent=w&&r?Math.round(w*r):'—';
+  }
+  const slot=day.slots.find(s=>s.id===slotId);
+  if(slot){
+    const allSets=loadLog(date,day.id,exId);
+    const done=allSets.filter(s=>s.weight&&s.reps).length;
+    const card=document.getElementById(`card-${slotId}`);
+    if(card){
+      card.classList.toggle('complete',done>=slot.sets);
+      const dot=card.querySelector('.card-dot');
+      const prog=card.querySelector('.card-prog');
+      if(dot)dot.style.background=done>=slot.sets?'#00d4ff':'rgba(30,64,128,0.3)';
+      if(prog){prog.textContent=`${done}/${slot.sets}`;prog.style.color=done>=slot.sets?'#00d4ff':'#4a6a9a'}
+    }
+  }
+}
+
+function deleteSet(slotId,idx){
+  const day=PROGRAM[activeDay];
+  const date=todayStr();
+  const exId=(selectedExercises[slotId]||{}).id||slotId;
+  const sets=loadLog(date,day.id,exId);
+  sets.splice(idx,1);
+  saveLog(date,day.id,exId,sets);
+  renderWorkoutView();
+}
+
+function toggleCard(slotId){
+  if(expandedCards.has(slotId))expandedCards.delete(slotId);
+  else expandedCards.add(slotId);
+  renderWorkoutView();
+}
+
+function swapExercise(slotId){
+  viewMode='plan';
+  renderContent();
+  // scroll to that slot
+  setTimeout(()=>{
+    const el=document.querySelector(`[data-slot="${slotId}"]`);
+    if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
+  },100);
+}
+
+function renderWorkoutView(){
+  const day=PROGRAM[activeDay];
+  const date=todayStr();
+  let html=`<div id="workout-view">
+    <button class="back-to-plan" onclick="backToPlan()">← Change exercises</button>`;
+
+  day.slots.forEach(slot=>{
+    const sel=selectedExercises[slot.id]||{id:slot.id,name:slot.name,equip:slot.equip};
+    const exId=sel.id;
+    const sets=loadLog(date,day.id,exId);
+    const done=sets.filter(s=>s.weight&&s.reps).length;
+    const isComplete=done>=slot.sets;
+    const isExp=expandedCards.has(slot.id);
+    const phaseColor=PHASE_COLORS[slot.phase]||'#888';
+
+    html+=`<div class="ex-card ${isComplete?'complete':''}" id="card-${slot.id}">
+      <div class="card-header" onclick="toggleCard('${slot.id}')">
+        <div class="card-thumb">${getSVG(exId)}</div>
+        <div class="card-info">
+          <div class="card-phase" style="color:${phaseColor}">${slot.phase}</div>
+          <div class="card-name">${sel.name}</div>
+          <div class="card-equip">${sel.equip}</div>
+        </div>
+        <div class="card-meta">
+          <div class="card-scheme">${slot.sets} × ${slot.reps}</div>
+          <div class="card-prog" style="color:${isComplete?'#00d4ff':'#4a6a9a'}">${done}/${slot.sets}</div>
+        </div>
+        <div class="card-dot" style="background:${isComplete?'#2E75B6':'#2a2a2a'}"></div>
+      </div>`;
+
+    if(isExp){
+      html+=`<div class="log-area">
+        <div class="log-hdr">
+          <div style="display:flex;gap:44px">
+            <span class="log-col">WEIGHT</span><span class="log-col">REPS</span>
+          </div>
+          <span class="log-col">VOL</span>
+        </div>`;
+      sets.forEach((set,i)=>{
+        const vol=(parseFloat(set.weight)&&parseFloat(set.reps))?Math.round(parseFloat(set.weight)*parseFloat(set.reps)):'—';
+        html+=`<div class="set-row">
+          <span class="set-num">${i+1}</span>
+          <div class="set-inputs">
+            <input class="set-input" type="number" placeholder="lbs" value="${set.weight}" oninput="updateSet('${slot.id}',${i},'weight',this.value)">
+            <div class="set-div"></div>
+            <input class="set-input" type="number" placeholder="reps" value="${set.reps}" oninput="updateSet('${slot.id}',${i},'reps',this.value)">
+          </div>
+          <span class="set-vol" id="vol-${slot.id}-${i}">${vol}</span>
+          <button class="set-del" onclick="deleteSet('${slot.id}',${i})">×</button>
+        </div>`;
+      });
+      html+=`<div class="log-actions">
+        <button class="log-add-btn" onclick="addSet('${slot.id}')">+ LOG SET</button>
+        <button class="swap-btn" onclick="swapExercise('${slot.id}')" title="Swap exercise">⇄</button>
+      </div></div>`;
+    }
+    html+=`</div>`;
+  });
+
+  // Progress section
+  if(!day.isRun&&!day.isOptional){
+    html+=`<div class="prog-section">
+      <div class="prog-sec-label">PROGRESS TRACKING</div>
+      <div class="prog-grid">
+        ${day.slots.map(slot=>{
+          const sel=selectedExercises[slot.id]||{};
+          return`<button class="prog-btn" onclick="openProgress('${sel.id||slot.id}','${(sel.name||slot.name).replace(/'/g,"\\'")}')">📈 ${(sel.name||slot.name).split(' ').slice(0,2).join(' ')}</button>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+
+  if(day.isRun){
+    html+=`<div class="run-note"><div class="run-note-lbl">⚠ THURSDAY NOTE</div><div class="run-note-txt">Keep today's effort honest. Legs are tomorrow. If you go hard today, expect squat numbers to be down 5–10%.</div></div>`;
+  }
+
+  html+=`</div>`;
+  document.getElementById('content').innerHTML=html;
+}
+
+// ════════════════════════════════════════════════════════
+// PROGRESS
+// ════════════════════════════════════════════════════════
+function openProgress(exId,exName){
+  const data=loadAllLogs(exId);
+  document.getElementById('prog-title').textContent=exName;
+  const chartEl=document.getElementById('prog-chart');
+  const statsEl=document.getElementById('prog-stats');
+  const histEl=document.getElementById('prog-hist');
+
+  if(data.length===0){
+    chartEl.innerHTML=`<div style="color:#444;text-align:center;padding:50px 0;font-size:12px">No data yet.<br>Log some sets to see progress.</div>`;
+    statsEl.innerHTML='';histEl.innerHTML='';
+  } else {
+    const maxW=Math.max(...data.map(d=>d.maxW));
+    const minW=Math.min(...data.map(d=>d.maxW));
+    const range=maxW-minW||1;
+    const gained=maxW-(data[0]?.maxW||maxW);
+    const pts=data.map((d,i)=>{
+      const x=data.length===1?150:(i/(data.length-1))*300;
+      const y=(1-(d.maxW-minW)/range)*140+10;
+      return`${x},${y}`;
+    });
+    chartEl.innerHTML=`<svg width="100%" height="100%" viewBox="0 0 300 160" preserveAspectRatio="none" style="display:block">
+      ${[0,.25,.5,.75,1].map(p=>`<line x1="0" y1="${p*160}" x2="300" y2="${p*160}" stroke="rgba(30,64,128,0.3)" stroke-width="1"/>`).join('')}
+      ${data.length>1?`<polyline points="${pts.join(' ')}" fill="none" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`:''}
+      ${data.map((d,i)=>{
+        const x=data.length===1?150:(i/(data.length-1))*300;
+        const y=(1-(d.maxW-minW)/range)*140+10;
+        return`<circle cx="${x}" cy="${y}" r="4" fill="#00d4ff" stroke="#060d1a" stroke-width="2"/>`;
+      }).join('')}
+    </svg>`;
+    statsEl.innerHTML=[{label:'BEST',val:`${maxW} lb`},{label:'SESSIONS',val:data.length},{label:'GAINED',val:`+${gained} lb`}]
+      .map(s=>`<div class="s-box"><div class="s-lbl">${s.label}</div><div class="s-val">${s.val}</div></div>`).join('');
+    histEl.innerHTML=[...data].reverse().slice(0,12).map(d=>`
+      <div class="h-row"><span class="h-date">${d.date}</span><span class="h-weight">${d.maxW} lb</span><span class="h-sets">${d.sets.length} sets</span></div>`).join('');
+  }
+  document.getElementById('prog-overlay').classList.add('show');
+}
+function closeProgress(){document.getElementById('prog-overlay').classList.remove('show')}
+
+// ════════════════════════════════════════════════════════
+// HEADER + RENDER
+// ════════════════════════════════════════════════════════
+function renderHeader(){
+  const today=getTodayName();
+  const day=PROGRAM[activeDay];
+  document.getElementById('day-title').textContent=day.label;
+  document.getElementById('day-sub').textContent=day.subtitle;
+  document.getElementById('today-badge').style.display=activeDay===today?'inline-block':'none';
+  const pills=document.getElementById('day-pills');
+  pills.innerHTML=DAYS.map(d=>{
+    const isAct=d===activeDay;
+    const isToday=d===today;
+    return`<button class="day-pill ${isAct?'active':''} ${isToday&&!isAct?'is-today':''}"
+      style="${isAct?`background:linear-gradient(135deg,#1a5aaa,#0f3d7a);border-color:#00d4ff`:''}; ${isAct?'color:#00d4ff':''}"
+      onclick="switchDay('${d}')">${d.slice(0,3).toUpperCase()}</button>`;
+  }).join('');
+}
+
+function renderContent(){
+  if(viewMode==='plan')renderPlanView();
+  else renderWorkoutView();
+}
+
+function switchDay(d){
+  activeDay=d;
+  selectedExercises={};
+  viewMode='plan';
+  expandedCards.clear();
+  renderHeader();
+  renderContent();
+}
+
+// init
+renderHeader();
+renderContent();
+updateTimerUI();
+</script>
+</body>
+</html>
